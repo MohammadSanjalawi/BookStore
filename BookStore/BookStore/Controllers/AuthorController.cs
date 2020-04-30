@@ -21,13 +21,15 @@ namespace BookStore.Controllers
         // GET: Author
         public ActionResult Index()
         {
-            return View();
+            var authors = authorRepository.List();
+            return View(authors);
         }
 
         // GET: Author/Details/5
         public ActionResult Details(int id)
         {
-            return View();
+            var author = authorRepository.Find(id);
+            return View(author);
         }
 
         // GET: Author/Create
@@ -39,11 +41,12 @@ namespace BookStore.Controllers
         // POST: Author/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public ActionResult Create(Author author)
         {
             try
             {
                 // TODO: Add insert logic here
+                authorRepository.Add(author);
 
                 return RedirectToAction(nameof(Index));
             }
@@ -56,18 +59,19 @@ namespace BookStore.Controllers
         // GET: Author/Edit/5
         public ActionResult Edit(int id)
         {
-            return View();
+            var author = authorRepository.Find(id);
+            return View(author);
         }
 
         // POST: Author/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public ActionResult Edit(int id, Author author)
         {
             try
             {
                 // TODO: Add update logic here
-
+                authorRepository.Update(id, author);
                 return RedirectToAction(nameof(Index));
             }
             catch
@@ -79,17 +83,21 @@ namespace BookStore.Controllers
         // GET: Author/Delete/5
         public ActionResult Delete(int id)
         {
-            return View();
+            var author = authorRepository.Find(id);
+
+            return View(author);
         }
 
         // POST: Author/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public ActionResult Delete(int id, Author author)
         {
             try
             {
                 // TODO: Add delete logic here
+
+                authorRepository.Delete(id);
 
                 return RedirectToAction(nameof(Index));
             }
