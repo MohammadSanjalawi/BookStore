@@ -57,6 +57,7 @@ namespace BookStore.Models.Repositories
             book.Title = newBook.Title;
             book.Description = newBook.Description;
             book.Author = newBook.Author;
+            book.ImageUrl = newBook.ImageUrl;
         }
     }
 }

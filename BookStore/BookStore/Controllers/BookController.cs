@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BookStore.Models;
 using BookStore.Models.Repositories;
 using BookStore.ViewModels;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,11 +16,13 @@ namespace BookStore.Controllers
     {
         private readonly IBookstoreRepository<Book> bookRepository;
         private readonly IBookstoreRepository<Author> authorRepository;
+        private readonly IHostingEnvironment hostingEnvironment;
 
-        public BookController(IBookstoreRepository<Book> bookRepository, IBookstoreRepository<Author> authorRepository)
+        public BookController(IBookstoreRepository<Book> bookRepository, IBookstoreRepository<Author> authorRepository, IHostingEnvironment hostingEnvironment )
         {
             this.bookRepository = bookRepository;
             this.authorRepository = authorRepository;
+            this.hostingEnvironment = hostingEnvironment;
         }
         // GET: Book
         public ActionResult Index()
@@ -54,6 +58,7 @@ namespace BookStore.Controllers
                 try
                 {
                     // TODO: Add insert logic here
+                    string fileName = UploadFile(model.File) ?? string.Empty;
 
                     if (model.AuthorId == -1)
                     {
@@ -68,7 +73,8 @@ namespace BookStore.Controllers
                         Id = model.BookId,
                         Title = model.Title,
                         Description = model.Description,
-                        Author = author
+                        Author = author,
+                        ImageUrl = fileName
 
                     };
                     bookRepository.Add(book);
@@ -98,7 +104,8 @@ namespace BookStore.Controllers
                 Description = book.Description,
                 Title = book.Title,
                 AuthorId = authorId,
-                Authors = authorRepository.List().ToList()
+                Authors = authorRepository.List().ToList(),
+                ImageUrl = book.ImageUrl
 
             };
 
@@ -113,12 +120,16 @@ namespace BookStore.Controllers
             try
             {
                 // TODO: Add update logic here
+
+                string fileName = UploadFile(viewModel.File, viewModel.ImageUrl);
+
                 var author = authorRepository.Find(viewModel.AuthorId);
                 Book book = new Book
                 {
                     Title = viewModel.Title,
                     Description = viewModel.Description,
-                    Author = author
+                    Author = author,
+                    ImageUrl = fileName
 
                 };
                 bookRepository.Update(viewModel.BookId, book);
@@ -126,7 +137,7 @@ namespace BookStore.Controllers
 
                 return RedirectToAction(nameof(Index));
             }
-            catch
+            catch(Exception ex)
             {
                 return View();
             }
@@ -175,6 +186,55 @@ namespace BookStore.Controllers
                 Authors = FillAuthorsSelect()
             };
             return vmodel;
+        }
+
+
+        string UploadFile(IFormFile file)
+        {
+            if (file != null)
+            {
+                string uploads = Path.Combine(hostingEnvironment.WebRootPath, "uploads");
+                string fullPath = Path.Combine(uploads, file.FileName);
+                //save Image
+
+                FileStream fs = new FileStream(fullPath, FileMode.Create);
+
+                file.CopyTo(fs);
+
+                fs.Close();
+                fs.Dispose();
+
+                return file.FileName;
+
+            }
+
+            return null;
+        }
+
+        string UploadFile(IFormFile file, string imageUrl)
+        {
+            if (file != null)
+            {
+                string uploads = Path.Combine(hostingEnvironment.WebRootPath, "uploads");
+                string newPath = Path.Combine(uploads, file.FileName);
+                //delete old Image
+
+                string fileOldPath = Path.Combine(uploads, imageUrl);
+                if (newPath != fileOldPath)
+                {
+                    System.IO.File.Delete(fileOldPath);
+                    //save Image
+                    FileStream fs = new FileStream(newPath, FileMode.Create);
+                    file.CopyTo(fs);
+
+                    fs.Close();
+                    fs.Dispose();
+                }
+
+                return file.FileName;
+            }
+
+            return imageUrl;
         }
     }
 }
