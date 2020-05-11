@@ -126,6 +126,7 @@ namespace BookStore.Controllers
                 var author = authorRepository.Find(viewModel.AuthorId);
                 Book book = new Book
                 {
+                    Id = viewModel.BookId,
                     Title = viewModel.Title,
                     Description = viewModel.Description,
                     Author = author,
